@@ -10,7 +10,7 @@ from pytorch_pretrained_bert import BertTokenizer, BertForTokenClassification, B
 
 # https://github.com/chakki-works/seqeval (will install Tensorflow 1.13)
 # Note: we could extract only the f1_score function and avoid installing Tensorflow
-from seqeval.metrics import f1_score
+from seqeval.metrics import f1_score, classification_report
 
 from tqdm import trange
 
@@ -19,18 +19,25 @@ from dataset import DimensionDataset
 
 # OPTIONAL: if you want to have more information on what's happening, activate the logger as follows
 import logging
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)  # include module/function call at prefix
+logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
 
 # -----------------------------
 
-epochs = 20
-learning_rate = 0.002        # 3e-5
+epochs = 50
+learning_rate = 0.0005        # 3e-5
 batch_size = 1
-sentence_max_tokens = 32
+sentence_max_tokens = 16
 
 max_grad_norm = 1.0
 
+#training_dataset_filename = "ner_dimension_training_set.txt"
+training_dataset_filename = "ner_dimension_training_set_easy_2.txt"
+
 run_validation_loop = True
+printing_only_f1_score = True
+
+
 # -----------------------------
 # Dataset
 
@@ -39,24 +46,24 @@ run_validation_loop = True
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 
-train_dim_dataset = DimensionDataset(tokenizer, 'ner_dimension_training_set.txt', max_tokens=sentence_max_tokens)
+train_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
 train_dim_dataset = torch.tensor(train_dim_dataset).type(torch.LongTensor)
 
 train_dataloader = data.DataLoader(train_dim_dataset, batch_size=batch_size, shuffle=False)
 
 
-print(f"number of training samples = {len(train_dim_dataset)}")
+logging.info(f"number of training samples = {len(train_dim_dataset)}")
 it = iter(train_dataloader)
 batch = next(it)
 
-print(f"batch shape: {batch.shape}")
+logging.info(f"batch shape: {batch.shape}")
 batch = batch.permute(1, 0, 2)
-print(f"batch shape after permutation: {batch.shape}")
-print(f"{batch_size} first samples:" )
-print(batch)
+logging.info(f"batch shape after permutation: {batch.shape}")
+logging.info(f"{batch_size} first samples:" )
+logging.info(batch)
 
 
-valid_dim_dataset = DimensionDataset(tokenizer, 'ner_dimension_training_set.txt', max_tokens=sentence_max_tokens)
+valid_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
 valid_dim_dataset = torch.tensor(valid_dim_dataset).type(torch.LongTensor)
 
 valid_dataloader = data.DataLoader(valid_dim_dataset, batch_size=batch_size, shuffle=False)
@@ -78,7 +85,7 @@ optimizer = Adam(optimizer_grouped_parameters, lr=learning_rate)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 n_gpu = torch.cuda.device_count()
 
-print(torch.cuda.get_device_name(0))
+logging.info(torch.cuda.get_device_name(0))
 
 
 # simple accuracy on a token level comparable to the accuracy in keras.
@@ -91,7 +98,7 @@ def flat_accuracy(preds, labels):
 # -----------------------------
 # TRAINING LOOP
 
-for _ in trange(epochs, desc="Epoch"):
+for ep in trange(epochs, desc="Epoch"):
     # *** TRAIN LOOP ***
     model.train()
 
@@ -127,7 +134,8 @@ for _ in trange(epochs, desc="Epoch"):
         model.zero_grad()
 
     # print train loss per epoch
-    print("Train loss: {}".format(tr_loss/nb_tr_steps))
+    if not printing_only_f1_score:
+        logging.info("Train loss: {}".format(tr_loss/nb_tr_steps))
 
     if run_validation_loop:
         # *** VALIDATION LOOP ***
@@ -165,9 +173,14 @@ for _ in trange(epochs, desc="Epoch"):
             nb_eval_steps += 1
 
         eval_loss = eval_loss/nb_eval_steps
-        print("Validation loss: {}".format(eval_loss))
-        print("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
+        if not printing_only_f1_score:
+            logging.info("Validation loss: {}".format(eval_loss))
+            logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
 
         pred_tags = [DimensionDataset.labels[p_i] for p in predictions for p_i in p]
         valid_tags = [DimensionDataset.labels[l_ii] for l in true_labels for l_i in l for l_ii in l_i]
-        print("F1-Score: {}".format(f1_score(pred_tags, valid_tags)))
+        logging.info("\tF1-Score: {}".format(f1_score(pred_tags, valid_tags)))
+
+        if ep == epochs-1 or (ep != 0 and ep % 10 == 0):
+            logging.info("")
+            logging.info(classification_report(pred_tags, valid_tags))
