@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
 
 # -----------------------------
 
-epochs = 50
+epochs = 20
 learning_rate = 0.0005        # 3e-5
 train_batch_size = 1
 valid_batch_size = 100
@@ -32,12 +32,14 @@ sentence_max_tokens = 16
 
 max_grad_norm = 1.0
 
-training_dataset_filename = "ner_dimension_training_set.txt"
-#training_dataset_filename = "ner_dimension_training_set_easy_2.txt"
+train_dataset_filename = "ner_dimension_training_set2.txt"
+#train_dataset_filename = "ner_dimension_training_set.txt"
+#train_dataset_filename = "ner_dimension_training_set_easy_2.txt"
+
+valid_dataset_filename = "ner_dimension_valid_set.txt"
 
 run_validation_loop = True
-printing_only_f1_score = True
-
+printing_f1_score_only = True
 
 # -----------------------------
 # Dataset
@@ -46,11 +48,11 @@ printing_only_f1_score = True
 # Load pre-trained model tokenizer (vocabulary)
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-train_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
+train_dim_dataset = DimensionDataset(tokenizer, train_dataset_filename, max_tokens=sentence_max_tokens)
 train_dim_dataset = torch.tensor(train_dim_dataset).type(torch.LongTensor)
 train_dataloader = data.DataLoader(train_dim_dataset, batch_size=train_batch_size, shuffle=True)
 
-valid_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
+valid_dim_dataset = DimensionDataset(tokenizer, valid_dataset_filename, max_tokens=sentence_max_tokens)
 valid_dim_dataset = torch.tensor(valid_dim_dataset).type(torch.LongTensor)
 valid_dataloader = data.DataLoader(valid_dim_dataset, batch_size=valid_batch_size, shuffle=False)
 
@@ -95,6 +97,23 @@ def flat_accuracy(preds, labels):
 # -----------------------------
 # TRAINING LOOP
 
+def get_labels(predictions, true_labels, filter_f1_labels):
+    pred_tags = [DimensionDataset.labels[p_i] for p in predictions for p_i in p]
+    valid_tags = [DimensionDataset.labels[l_ii] for l in true_labels for l_i in l for l_ii in l_i]
+
+    if filter_f1_labels:
+        # filter both predictions array to keep only the ones from true_labels with non zeros
+        np_true_labels = np.array(valid_tags)
+        np_predictions = np.array(pred_tags)
+
+        mask = np.ma.masked_where(np_true_labels == 'O', np_true_labels)
+        valid_tags = np.ma.compressed(mask).tolist()
+
+        mask = np.ma.masked_where(np_true_labels == 'O', np_predictions)
+        pred_tags = np.ma.compressed(mask).tolist()
+
+    return pred_tags, valid_tags
+
 for ep in trange(epochs, desc="Epoch"):
     # *** TRAIN LOOP ***
     model.train()
@@ -131,7 +150,7 @@ for ep in trange(epochs, desc="Epoch"):
         model.zero_grad()
 
     # print train loss per epoch
-    if not printing_only_f1_score:
+    if not printing_f1_score_only:
         logging.info("Train loss: {}".format(tr_loss/nb_tr_steps))
 
     if run_validation_loop:
@@ -170,13 +189,16 @@ for ep in trange(epochs, desc="Epoch"):
             nb_eval_steps += 1
 
         eval_loss = eval_loss/nb_eval_steps
-        if not printing_only_f1_score:
+
+        if not printing_f1_score_only:
             logging.info("Validation loss: {}".format(eval_loss))
             logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
 
-        pred_tags = [DimensionDataset.labels[p_i] for p in predictions for p_i in p]
-        valid_tags = [DimensionDataset.labels[l_ii] for l in true_labels for l_i in l for l_ii in l_i]
-        logging.info("\tF1-Score: {}".format(f1_score(pred_tags, valid_tags)))
+        pred_tags, valid_tags = get_labels(predictions, true_labels, filter_f1_labels=False)
+        f_pred_tags, f_valid_tags = get_labels(predictions, true_labels, filter_f1_labels=True)
+
+        logging.info(f"\tF1-Score: {f1_score(pred_tags, valid_tags):.5f}"
+                     f"\tF1-Score (filtered): {f1_score(f_pred_tags, f_valid_tags):.5f}")
 
         if ep == epochs-1 or (ep != 0 and ep % 10 == 0):
             logging.info("")
