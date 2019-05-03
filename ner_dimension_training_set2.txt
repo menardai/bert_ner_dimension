@@ -47,6 +47,12 @@ a size of 640x480
 (640,480) is good
 I want (640,480)
 
+Give me 640 480
+640 480 is perfect
+Please 640 480
+Fit to 640 480
+Make 640 480
+
 640x480 please!
 640 480 please!
 640:480 please!
@@ -64,23 +70,38 @@ I want (640,480)
 (640,480)
 640 by 480
 640 and 480
+640x480 pixels
+640 480 pixels
+640:480 pixel
+640,480 pix
+640;480 pixels
+640-480 pixels
+(640,480)
+640 by 480
+640 and 480
 640 width and 480 height
 640 width by 480 height
 640 width by 480
 640 by 480 height
 480 height by 640
 480 height and 640
+480 height by 640 width
+480 height and 640 width
+480 height by 640 wide
+480 height and 640 wide
 large of 640 and a height of 480
 horizontal 640 with 480 vertical
 640 horizontal and 480 vertical
 480 vertical for 640 horizontal
-a tallness of 480 with a with of 640
 
 Make it 640 wide by 480 height
 Resize it 640 wide by 480 height
 Change the size to 640 wide by 480 height
 I want the image to be 640 wide by 480 height
 
+Change the size to 480 height and 640 width
+Change the size to 480 height and 640 wide
+I want the image to be 480 height and 640 width
 I want the image to be 480 height and 640 wide
 I want the image 640 and 480
 Please make it 640, 480
@@ -88,7 +109,6 @@ Please make it 640, 480
 Make it larger at 640
 Make it higher at 480
 I want an image 480 tall
-A tallness of 480
 vertical 480
 horizontal 640
 a wideness of 640
@@ -96,6 +116,8 @@ a span of 640
 a broadness of 640
 a largeness of 640
 
+Enlarge to 800
+Enlarge to about 800
 Grow to 800
 Grow to about 800
 Reduce to 800

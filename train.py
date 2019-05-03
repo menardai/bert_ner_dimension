@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
 
 # -----------------------------
 
-epochs = 20
+epochs = 100
 learning_rate = 0.0005        # 3e-5
 train_batch_size = 1
 valid_batch_size = 100
@@ -49,12 +49,12 @@ printing_f1_score_only = True
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 train_dim_dataset = DimensionDataset(tokenizer, train_dataset_filename, max_tokens=sentence_max_tokens)
-train_dim_dataset = torch.tensor(train_dim_dataset).type(torch.LongTensor)
-train_dataloader = data.DataLoader(train_dim_dataset, batch_size=train_batch_size, shuffle=True)
+train_dim_dataset_tensor = torch.tensor(train_dim_dataset).type(torch.LongTensor)
+train_dataloader = data.DataLoader(train_dim_dataset_tensor, batch_size=train_batch_size, shuffle=True)
 
 valid_dim_dataset = DimensionDataset(tokenizer, valid_dataset_filename, max_tokens=sentence_max_tokens)
-valid_dim_dataset = torch.tensor(valid_dim_dataset).type(torch.LongTensor)
-valid_dataloader = data.DataLoader(valid_dim_dataset, batch_size=valid_batch_size, shuffle=False)
+valid_dim_dataset_tensor = torch.tensor(valid_dim_dataset).type(torch.LongTensor)
+valid_dataloader = data.DataLoader(valid_dim_dataset_tensor, batch_size=valid_batch_size, shuffle=False)
 
 
 logging.info(f"number of training samples = {len(train_dim_dataset)}")
@@ -113,6 +113,34 @@ def get_labels(predictions, true_labels, filter_f1_labels):
         pred_tags = np.ma.compressed(mask).tolist()
 
     return pred_tags, valid_tags
+
+def print_mislabeled_samples(dataset, pred_tags):
+    succeed_list = []
+    failed_list = []
+
+    for index in range(len(dataset)):
+        true_dim = dataset.get_item_dimension(index)
+
+        f = index * dataset.max_tokens
+        to = f + dataset.max_tokens
+        pred = pred_tags[f:to]
+        pred_dim = dataset.get_item_dimension(index, pred)
+
+        output_str = f"{true_dim}\t{pred_dim}\t{dataset.samples[index]['original']}"
+        if pred_dim == true_dim:
+            succeed_list.append(output_str)
+        else:
+            failed_list.append(output_str)
+
+    logging.info(f"{len(failed_list)}/{len(dataset)} failed and "
+                 f"{len(succeed_list)}/{len(dataset)} succeed "
+                 f"({(len(succeed_list)/len(dataset)):.2f})")
+    for failed in failed_list:
+        logging.info(f"* {failed}")
+    logging.info('----------------------')
+    for succeed in succeed_list:
+        logging.info(succeed)
+
 
 for ep in trange(epochs, desc="Epoch"):
     # *** TRAIN LOOP ***
@@ -203,3 +231,5 @@ for ep in trange(epochs, desc="Epoch"):
         if ep == epochs-1 or (ep != 0 and ep % 10 == 0):
             logging.info("")
             logging.info(classification_report(pred_tags, valid_tags))
+
+            print_mislabeled_samples(valid_dim_dataset, pred_tags)

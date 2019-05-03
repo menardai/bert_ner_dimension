@@ -121,6 +121,18 @@ class DimensionDataset(data.Dataset):
                     dim['U'] = value
         return dim
 
+    def get_item_dimension(self, index, labels=None):
+        '''
+        Return dimension for the specified sample index.
+        ex: {'W': 640, 'H':480}
+        '''
+        if not labels:
+            labels = self.samples[index]['labels']
+
+        return DimensionDataset.dimension(self.samples[index]['tokenized_text'],
+                                          labels,
+                                          self.samples[index]['number_list'])
+
     def __getitem__(self, index):
         sample = self.samples[index]
         return sample['input_ids'], sample['attention_mask'], sample['labels_ids']

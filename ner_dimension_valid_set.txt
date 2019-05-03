@@ -1,19 +1,19 @@
-Resize the image to 640x480
+Reduce the image to 640x480
 Resize the image to 640 480
-Resize the image to 640:480
-Resize the image to 640 by 480
+Enlarge my picture to 640:480
+Update this pic to 640 by 480
 
-Change the size to 640x480
-Change the size to 640,480
+Change the dim to 640x480
+Change the dimension to 640,480
 Change the size to 640-480
 
-Make it 640x480
-Make it 640 480
-Make it 640:480
-Make it 640 by 480
+Make this one 640x480
+Go for 640 480
+Yeap, perfectly good at 640:480
+Super fine at 640 by 480
 
-Fit the picture in 640 480
-Fit the picture in 640 by 480
+Fit previous image in 640 480
+Fitting in in 640 by 480 should be nice
 
 The size I'm looking for is 640x480
 640x480 would be perfect!
@@ -21,14 +21,14 @@ Yes, please go ahead with 640 and 480
 I expected a dimension of 640:480
 Go for 640 and 480 height
 I asked for a larger image of 640x480
-dim 640x480
-a size of 640x480
-(640,480) is good
+dim=(640,480)
+a size of 640 480
+(640x480) is good
 I want (640,480)
 
-640x480 please!
+640/480 please!
 
-640x480
+640 x 480
 640 by 480
 640 and 480
 640 width and 480 height
@@ -42,26 +42,25 @@ I want the image to be 480 height and 640 wide
 I want the image 640 and 480
 Please make it 640, 480
 
-Make it larger at 640
-A tallness of 480
-vertical 480
+Make it smaller at 640
+vertical 480, thanks
 a wideness of 640
 
-Grow to 800
+Grow to 800 pixels
 Grow to about 800
 Fit to 800
 Fit to about 800
 Make it at least 800
-I want it about 800
+I want it about 800 more
 800 is good
 not sure, but 800 would be correct
 
-Resize these 2 images like the previous ones
-Change the size of these 2 images
+Resize these 2 pics like the previous ones
+Change the size of these 2 jpeg
 Make the same change on the 3 other pictures
 1 of the sides are incorrect
 Can I resize 2 pictures at once?
-How can we change the size of 2 images?
+How can we change the size of 2 png images?
 How do I upload more than 1 image at the time?
 
 Please repeat the last 2 steps
