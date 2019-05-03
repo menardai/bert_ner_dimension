@@ -26,13 +26,14 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
 
 epochs = 50
 learning_rate = 0.0005        # 3e-5
-batch_size = 1
+train_batch_size = 1
+valid_batch_size = 100
 sentence_max_tokens = 16
 
 max_grad_norm = 1.0
 
-#training_dataset_filename = "ner_dimension_training_set.txt"
-training_dataset_filename = "ner_dimension_training_set_easy_2.txt"
+training_dataset_filename = "ner_dimension_training_set.txt"
+#training_dataset_filename = "ner_dimension_training_set_easy_2.txt"
 
 run_validation_loop = True
 printing_only_f1_score = True
@@ -45,11 +46,13 @@ printing_only_f1_score = True
 # Load pre-trained model tokenizer (vocabulary)
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-
 train_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
 train_dim_dataset = torch.tensor(train_dim_dataset).type(torch.LongTensor)
+train_dataloader = data.DataLoader(train_dim_dataset, batch_size=train_batch_size, shuffle=True)
 
-train_dataloader = data.DataLoader(train_dim_dataset, batch_size=batch_size, shuffle=False)
+valid_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
+valid_dim_dataset = torch.tensor(valid_dim_dataset).type(torch.LongTensor)
+valid_dataloader = data.DataLoader(valid_dim_dataset, batch_size=valid_batch_size, shuffle=False)
 
 
 logging.info(f"number of training samples = {len(train_dim_dataset)}")
@@ -59,14 +62,8 @@ batch = next(it)
 logging.info(f"batch shape: {batch.shape}")
 batch = batch.permute(1, 0, 2)
 logging.info(f"batch shape after permutation: {batch.shape}")
-logging.info(f"{batch_size} first samples:" )
+logging.info(f"{train_batch_size} first samples:" )
 logging.info(batch)
-
-
-valid_dim_dataset = DimensionDataset(tokenizer, training_dataset_filename, max_tokens=sentence_max_tokens)
-valid_dim_dataset = torch.tensor(valid_dim_dataset).type(torch.LongTensor)
-
-valid_dataloader = data.DataLoader(valid_dim_dataset, batch_size=batch_size, shuffle=False)
 
 
 # -----------------------------
