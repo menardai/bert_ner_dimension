@@ -23,10 +23,11 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
 
 # -----------------------------
+FULL_FINETUNING = True
 
-epochs = 100
-learning_rate = 0.0005        # 3e-5
-train_batch_size = 1
+epochs = 10
+learning_rate = 3e-5        # 3e-5 for full  -  0.0005 only top
+train_batch_size = 5        # no more than 1 when fine tuning top layers only
 valid_batch_size = 100
 sentence_max_tokens = 16
 
@@ -73,9 +74,21 @@ logging.info(batch)
 model = BertForTokenClassification.from_pretrained("bert-base-uncased", num_labels=len(DimensionDataset.label2idx))
 model.cuda()
 
-# finetune only the linear classifier on top
-param_optimizer = list(model.classifier.named_parameters())
-optimizer_grouped_parameters = [{"params": [p for n, p in param_optimizer]}]
+if FULL_FINETUNING:
+    param_optimizer = list(model.named_parameters())
+    no_decay = ['bias', 'gamma', 'beta']
+
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+         'weight_decay_rate': 0.01},
+        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
+         'weight_decay_rate': 0.0}
+    ]
+else:
+    # finetune only the linear classifier on top
+    param_optimizer = list(model.classifier.named_parameters())
+    optimizer_grouped_parameters = [{"params": [p for n, p in param_optimizer]}]
+
 optimizer = Adam(optimizer_grouped_parameters, lr=learning_rate)
 
 
