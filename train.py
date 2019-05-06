@@ -19,7 +19,7 @@ from dataset import DimensionDataset
 def get_data_loaders(tokenizer,
                      train_dataset_filename,
                      valid_dataset_filename,
-                     train_batch_size = 5,
+                     train_batch_size = 10,
                      valid_batch_size = 50,
                      max_tokens=16):
     """
@@ -70,11 +70,13 @@ def get_bert_for_token_classification(learning_rate, num_labels, is_full_finetun
 
     return model, optimizer
 
+
 def flat_accuracy(preds, labels):
     """ Simple accuracy on a token level comparable to the accuracy in keras. """
     pred_flat = np.argmax(preds, axis=2).flatten()
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
+
 
 def get_labels(predicted_classes, ground_truth_classes):
     """ Return labels for the given class numbers. """
@@ -82,6 +84,7 @@ def get_labels(predicted_classes, ground_truth_classes):
     valid_tags = [DimensionDataset.labels[l_ii] for l in ground_truth_classes for l_i in l for l_ii in l_i]
 
     return pred_tags, valid_tags
+
 
 def print_mislabeled_samples(dataset, pred_tags, print_correct=False):
     succeed_list = []
@@ -112,11 +115,14 @@ def print_mislabeled_samples(dataset, pred_tags, print_correct=False):
         for succeed in succeed_list:
             logging.info(succeed)
 
+
 def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
+          save_filename=None, save_min_f1_score=0.90,
           printing_f1_score_only=True, valid_dataset=None):
     """ Train the model for the specified number of epochs. """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    best_f1_score = 0
 
     for ep in trange(nb_epochs, desc="Epoch"):
         model.train()
@@ -198,7 +204,14 @@ def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
 
             pred_tags, valid_tags = get_labels(predictions_ids, true_label_ids)
 
-            logging.info(f"\tF1-Score: {f1_score(pred_tags, valid_tags):.5f}")
+            score = f1_score(pred_tags, valid_tags)
+
+            if save_filename and score > best_f1_score and score > save_min_f1_score:
+                best_f1_score = score
+                torch.save(model.state_dict(), save_filename)
+                logging.info(f"\tF1-Score: {score :.5f} \t(model saved)")
+            else:
+                logging.info(f"\tF1-Score: {score :.5f}")
 
             if ep == nb_epochs-1:
                 logging.info("")
@@ -214,11 +227,15 @@ if __name__ == '__main__':
     # Instantiate the BERT Tokenizer. Load pre-trained model tokenizer (vocabulary)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
+    # train_batch_size is an important hyper params in fine tuning this model
     _, valid_dataset, train_dataloader, valid_dataloader = get_data_loaders(tokenizer,
-                                                          "ner_dimension_training_set2.txt",
-                                                          "ner_dimension_valid_set.txt")
+                                                          "data/ner_dimension_training_set2.txt",
+                                                          "data/ner_dimension_valid_set.txt",
+                                                          train_batch_size=10)
 
-    model, optimizer = get_bert_for_token_classification(learning_rate = 3e-5,
+    model, optimizer = get_bert_for_token_classification(learning_rate = 2e-5,
                                                          num_labels=len(DimensionDataset.label2idx))
 
-    train(model, train_dataloader, valid_dataloader, nb_epochs=3, valid_dataset=valid_dataset)
+    train(model, train_dataloader, valid_dataloader, nb_epochs=30, valid_dataset=valid_dataset,
+          save_filename='models/dimension_ner_bert.pt',
+          save_min_f1_score=0.95)
