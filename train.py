@@ -13,7 +13,7 @@ from pytorch_pretrained_bert import BertTokenizer, BertForTokenClassification
 from seqeval.metrics import f1_score, classification_report
 from tqdm import trange
 
-from dataset import DimensionDataset
+from model import DimensionDataset, DimensionBertNer
 
 
 def get_data_loaders(tokenizer,
@@ -42,15 +42,10 @@ def get_data_loaders(tokenizer,
     return train_dataset, valid_dataset, train_dataloader, valid_dataloader
 
 
-def get_bert_for_token_classification(learning_rate, num_labels, is_full_finetunning=True):
+def setup_model_for_finetuning(model, learning_rate, is_full_finetunning=True):
     """
-    Create an instance of BERT model for token classification and
-    setup this model for finetuning.
+    Setup the specified model for finetuning, create the optimizer.
     """
-
-    model = BertForTokenClassification.from_pretrained("bert-base-uncased", num_labels=num_labels)
-    model.cuda()
-
     if is_full_finetunning:
         param_optimizer = list(model.named_parameters())
         no_decay = ['bias', 'gamma', 'beta']
@@ -69,13 +64,6 @@ def get_bert_for_token_classification(learning_rate, num_labels, is_full_finetun
     optimizer = Adam(optimizer_grouped_parameters, lr=learning_rate)
 
     return model, optimizer
-
-
-def flat_accuracy(preds, labels):
-    """ Simple accuracy on a token level comparable to the accuracy in keras. """
-    pred_flat = np.argmax(preds, axis=2).flatten()
-    labels_flat = labels.flatten()
-    return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
 
 def get_labels(predicted_classes, ground_truth_classes):
@@ -118,17 +106,19 @@ def print_mislabeled_samples(dataset, pred_tags, print_correct=False):
 
 def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
           save_filename=None, save_min_f1_score=0.90,
-          printing_f1_score_only=True, valid_dataset=None):
+          eval_f1_score_only=True, valid_dataset=None):
     """ Train the model for the specified number of epochs. """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
     best_f1_score = 0
 
     for ep in trange(nb_epochs, desc="Epoch"):
         model.train()
 
-        tr_loss = 0
-        nb_tr_examples, nb_tr_steps = 0, 0
+        train_loss = 0
+        nb_train_steps = 0
 
         for step, batch in enumerate(train_dataloader):
             # permute the tensor to go from shape (batch size, 3, max_tokens) to (3, batch size, max tokens)
@@ -136,20 +126,19 @@ def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
 
             # add batch to gpu
             batch = tuple(t.to(device) for t in batch)
-            b_input_ids, b_input_mask, b_labels = batch
+            batch_input_ids, batch_input_mask, batch_labels = batch
 
             # forward pass
-            loss = model(b_input_ids, token_type_ids=None,
-                         attention_mask=b_input_mask,
-                         labels=b_labels)
+            loss = model(batch_input_ids, token_type_ids=None,
+                         attention_mask=batch_input_mask,
+                         labels=batch_labels)
 
             # backward pass
             loss.backward()
 
             # track train loss
-            tr_loss += loss.item()
-            nb_tr_examples += b_input_ids.size(0)
-            nb_tr_steps += 1
+            train_loss += loss.item()
+            nb_train_steps += 1
 
             # gradient clipping
             torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=1.0)
@@ -159,83 +148,90 @@ def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
             model.zero_grad()
 
         # print train loss per epoch
-        if not printing_f1_score_only:
-            logging.info("Train loss: {}".format(tr_loss/nb_tr_steps))
+        if not eval_f1_score_only:
+            logging.info("Train loss: {}".format(train_loss/nb_train_steps))
 
         if valid_dataloader:
             model.eval()
 
-            eval_loss, eval_accuracy = 0, 0
-            nb_eval_steps, nb_eval_examples = 0, 0
-            predictions_ids, true_label_ids = [], []
+            true_label_ids = []
+            predictions_ids = []
+
+            eval_loss = 0
+            eval_accuracy = 0
+            nb_eval_steps = 0
 
             for batch in valid_dataloader:
                 batch = batch.permute(1, 0, 2)
+
                 batch = tuple(t.to(device) for t in batch)
-                b_input_ids, b_input_mask, b_labels = batch
+                batch_input_ids, batch_input_mask, batch_labels = batch
 
                 with torch.no_grad():
-                    tmp_eval_loss = model(b_input_ids, token_type_ids=None,
-                                          attention_mask=b_input_mask,
-                                          labels=b_labels)
-
-                    logits = model(b_input_ids, token_type_ids=None,
-                                   attention_mask=b_input_mask)
+                    logits = model(batch_input_ids, token_type_ids=None, attention_mask=batch_input_mask)
 
                 logits = logits.detach().cpu().numpy()
-                label_ids = b_labels.to('cpu').numpy()
+                label_ids = batch_labels.to('cpu').numpy()
 
                 predictions_ids.extend([list(p) for p in np.argmax(logits, axis=2)])
                 true_label_ids.append(label_ids)
 
-                tmp_eval_accuracy = flat_accuracy(logits, label_ids)
+                if not eval_f1_score_only:
+                    # compute loss and accuracy for this batch
+                    with torch.no_grad():
+                        tmp_eval_loss = model(batch_input_ids, token_type_ids=None,
+                                              attention_mask=batch_input_mask,
+                                              labels=batch_labels)
 
-                eval_loss += tmp_eval_loss.mean().item()
-                eval_accuracy += tmp_eval_accuracy
+                        eval_loss += tmp_eval_loss.mean().item()
 
-                nb_eval_examples += b_input_ids.size(0)
-                nb_eval_steps += 1
+                        tmp_eval_accuracy = DimensionBertNer.flat_accuracy(logits, label_ids)
+                        eval_accuracy += tmp_eval_accuracy
 
-            eval_loss = eval_loss/nb_eval_steps
+                        nb_eval_steps += 1
 
-            if not printing_f1_score_only:
-                logging.info("Validation loss: {}".format(eval_loss))
-                logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
-
+            # compute f1 score
             pred_tags, valid_tags = get_labels(predictions_ids, true_label_ids)
-
             score = f1_score(pred_tags, valid_tags)
 
+            # save model weights if f1 score meets minimum and set a new standard
             if save_filename and score > best_f1_score and score > save_min_f1_score:
-                best_f1_score = score
                 torch.save(model.state_dict(), save_filename)
+
+                best_f1_score = score
                 logging.info(f"\tF1-Score: {score :.5f} \t(model saved)")
             else:
                 logging.info(f"\tF1-Score: {score :.5f}")
 
+            # on last epoch, print a small report and the list of mislabeled evaluation samples
             if ep == nb_epochs-1:
-                logging.info("")
                 logging.info(classification_report(pred_tags, valid_tags))
 
                 if valid_dataset:
                     print_mislabeled_samples(valid_dataset, pred_tags)
 
+            # compute validation loss and accuracy, if requested
+            if not eval_f1_score_only:
+                eval_loss = eval_loss / nb_eval_steps
+
+                logging.info("Validation loss: {}".format(eval_loss))
+                logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
 
-    # Instantiate the BERT Tokenizer. Load pre-trained model tokenizer (vocabulary)
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    dim_ner = DimensionBertNer()
 
     # train_batch_size is an important hyper params in fine tuning this model
-    _, valid_dataset, train_dataloader, valid_dataloader = get_data_loaders(tokenizer,
+    _, valid_dataset, train_dataloader, valid_dataloader = get_data_loaders(dim_ner.tokenizer,
                                                           "data/ner_dimension_training_set2.txt",
                                                           "data/ner_dimension_valid_set.txt",
                                                           train_batch_size=10)
 
-    model, optimizer = get_bert_for_token_classification(learning_rate = 2e-5,
-                                                         num_labels=len(DimensionDataset.label2idx))
+    model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 2e-5)
 
-    train(model, train_dataloader, valid_dataloader, nb_epochs=30, valid_dataset=valid_dataset,
+    train(model, train_dataloader, valid_dataloader,
+          nb_epochs=30, valid_dataset=valid_dataset,
           save_filename='models/dimension_ner_bert.pt',
           save_min_f1_score=0.95)
