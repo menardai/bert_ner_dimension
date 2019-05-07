@@ -10,20 +10,33 @@ from pytorch_pretrained_bert import BertTokenizer, BertForTokenClassification
 
 
 class DimensionDataset(data.Dataset):
+
     labels = ['O', 'W', 'H', 'U']
     label2idx = {label: i for i, label in enumerate(labels)}
 
-    def __init__(self, tokenizer, dataset_filename, max_tokens=16):
+    def __init__(self, tokenizer, dataset_filename=None, lines_to_predict=None, max_tokens=16):
         self.tokenizer = tokenizer
         self.max_tokens = max_tokens
 
         # make sure the index of label "O" (other) is 0 since we will pad with 0 later
         assert DimensionDataset.label2idx.get('O') == 0
 
+        # make sure at least one of dataset_filename or lines_to_predict is not none
+        if dataset_filename is None and lines_to_predict is None:
+            raise ValueError('Both dataset_filename and lines_to_predict are undefined, please provide one of them.')
+
+        # make sure only one of dataset_filename and lines_to_predict is not none
+        if dataset_filename and lines_to_predict:
+            raise ValueError('Please provide only one of these two params: dataset_filename and lines_to_predict.')
+
         self.samples = []
 
-        with open(dataset_filename) as f:
-            lines = [line.rstrip('\n') for line in f if line.strip()]
+        if dataset_filename:
+            with open(dataset_filename) as f:
+                lines = [line.rstrip('\n') for line in f if line.strip()]
+
+        if lines_to_predict:
+            lines = [line.rstrip('\n') for line in lines_to_predict if line.strip()]
 
         for line in lines:
             sample = {}
@@ -43,24 +56,30 @@ class DimensionDataset(data.Dataset):
             # ex: ['[CLS]', 'res', '##ize', 'number', 'image', 'to', 'number', 'x', 'number']
             sample['tokenized_text'] = tokenizer.tokenize("[CLS] " + text_number)
 
-            # store the tag for each token
-            # ex: ['O', 'O', 'O', 'O', 'O', 'O', 'W', 'O', 'H']
-            sample['labels'] = self._labels(sample['tokenized_text'], sample['number_list'])
-
-            assert len(sample['tokenized_text']) == len(sample['labels'])
-
             # convert tokens into indexes (embeddings)
             sample['input_ids'] = self.zero_padding(
                 tokenizer.convert_tokens_to_ids(sample['tokenized_text']))
 
-            # convert labels in indexes
-            sample['labels_ids'] = self.zero_padding(
-                [DimensionDataset.label2idx.get(label) for label in sample['labels']])
-
-            assert len(sample['input_ids']) == len(sample['labels_ids'])
-
             # create a mask to ignore the padded elements in the sequences
             sample['attention_mask'] = [float(i > 0) for i in sample['input_ids']]
+
+            # extract truth label from original text for given dataset.
+            # (in case of text_to_predict, the labels will be compute using DimensionBertNer.predict() function)
+            if dataset_filename:
+                # store the tag for each token
+                # ex: ['O', 'O', 'O', 'O', 'O', 'O', 'W', 'O', 'H']
+                sample['labels'] = self._get_labels(sample['tokenized_text'], sample['number_list'])
+
+                assert len(sample['tokenized_text']) == len(sample['labels'])
+
+                # convert labels in indexes
+                sample['labels_ids'] = self.zero_padding(
+                    [DimensionDataset.label2idx.get(label) for label in sample['labels']])
+
+                assert len(sample['input_ids']) == len(sample['labels_ids'])
+            else:
+                # store all zeros in labels since we don't know them
+                sample['labels_ids'] = np.zeros(self.max_tokens)
 
             self.samples.append(sample)
 
@@ -75,7 +94,7 @@ class DimensionDataset(data.Dataset):
             padded[:len(a)] = n
             return padded.astype(np.int32).tolist()
 
-    def _labels(self, tokenized_text, num_list):
+    def _get_labels(self, tokenized_text, num_list):
         '''
         Generate labels for each token: 640->W, 480->H, 800->U, *->O
 
@@ -102,6 +121,11 @@ class DimensionDataset(data.Dataset):
                 labels.append('O')
 
         return labels
+
+    def set_labels(self, predictions_ids, predictions_labels):
+        for index, (idx, label) in enumerate(zip(predictions_ids, predictions_labels)):
+            self.samples[index]['labels_ids'] = idx
+            self.samples[index]['labels'] = label
 
     @staticmethod
     def dimension(tokenized_text, labels, number_list):
@@ -138,17 +162,36 @@ class DimensionDataset(data.Dataset):
 
     def __getitem__(self, index):
         sample = self.samples[index]
+        # note: all three list returned must have the dimension
         return sample['input_ids'], sample['attention_mask'], sample['labels_ids']
 
     def __len__(self):
         return len(self.samples)
+
+    def __repr__(self):
+        str = f"{self.__class__} - {len(self.samples)} samples\n"
+
+        for index, sample in enumerate(self.samples):
+            str += f"index {index}\n"
+            str += f"\toriginal:\t{sample['original']}\n"
+            str += f"\tnumber_list:\t{sample['number_list']}\n"
+            str += f"\ttokenized_text:\t{sample['tokenized_text']}\n"
+            str += f"\tinput_ids:\t{sample['input_ids']}\n"
+            str += f"\tattention_mask:\t{sample['attention_mask']}\n"
+            str += f"\tlabels_ids:\t{sample['labels_ids']}\n"
+            if sample['labels']:
+                str += f"\tlabels:\t{sample['labels']}\n"
+            else:
+                str += f"\tlabels:\tundefined\n"
+
+        return str
 
 
 class DimensionBertNer(object):
 
     def __init__(self, model_weight_filename=None):
         """
-        Load an instance of BERT model for dimension classification .
+        Load an instance of BERT model for dimension classification.
         """
         self.num_labels = len(DimensionDataset.label2idx)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -174,5 +217,37 @@ class DimensionBertNer(object):
         labels_flat = labels.flatten()
         return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
+    def predict(self, lines_to_predict, max_tokens=16):
+        # build the data loader
+        bs = min(64, len(lines_to_predict))
+        dataset = DimensionDataset(self.tokenizer, lines_to_predict=lines_to_predict, max_tokens=max_tokens)
+        dataset_tensor = torch.tensor(dataset).type(torch.LongTensor)
+        dataloader = data.DataLoader(dataset_tensor, batch_size=bs, shuffle=False)
 
+        self.model.to(self.device)
+        self.model.eval()
 
+        predictions_ids = []
+
+        for batch in dataloader:
+            # permute the tensor to go from shape (batch size, 3, max_tokens) to (3, batch size, max tokens)
+            batch = batch.permute(1, 0, 2)
+
+            # add batch to gpu
+            batch = tuple(t.to(self.device) for t in batch)
+            batch_input_ids, batch_input_mask, _ = batch
+
+            with torch.no_grad():
+                logits = self.model(batch_input_ids, token_type_ids=None, attention_mask=batch_input_mask)
+
+            logits = logits.detach().cpu().numpy()
+
+            predictions_ids.extend([list(p) for p in np.argmax(logits, axis=2)])
+
+        # convert prediction indexes in labels. Resulting in a list of shape [nb_samples, max_tokens]
+        predictions_labels = [[DimensionDataset.labels[class_idx] for class_idx in pred] for pred in predictions_ids]
+
+        dataset.set_labels(predictions_ids, predictions_labels)
+
+        #logging.info(f"predicted labels: {predictions_labels}")
+        logging.info(dataset)

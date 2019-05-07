@@ -6,7 +6,6 @@ import numpy as np
 import torch.utils.data as data
 
 from torch.optim import Adam
-from pytorch_pretrained_bert import BertTokenizer, BertForTokenClassification
 
 # https://github.com/chakki-works/seqeval (will install Tensorflow 1.13)
 # Note: we could extract only the f1_score function and avoid installing Tensorflow
