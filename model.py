@@ -218,6 +218,13 @@ class DimensionBertNer(object):
         return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
     def predict(self, lines_to_predict, max_tokens=16):
+        """
+        Returns dimension dict for each text line of the given lines_to_predict param.
+
+        :param lines_to_predict: list of text to decode
+        :param max_tokens: maximum tokens per sentence
+        :return: Return dimension for the specified sample index. ex: {'W': 640, 'H':480}
+        """
         # build the data loader
         bs = min(64, len(lines_to_predict))
         dataset = DimensionDataset(self.tokenizer, lines_to_predict=lines_to_predict, max_tokens=max_tokens)
@@ -247,7 +254,11 @@ class DimensionBertNer(object):
         # convert prediction indexes in labels. Resulting in a list of shape [nb_samples, max_tokens]
         predictions_labels = [[DimensionDataset.labels[class_idx] for class_idx in pred] for pred in predictions_ids]
 
+        # set the predicted labels (class id and label)
         dataset.set_labels(predictions_ids, predictions_labels)
+        #logging.info(dataset)
 
-        #logging.info(f"predicted labels: {predictions_labels}")
-        logging.info(dataset)
+        predicted_dim = [dataset.get_item_dimension(i) for i in range(len(dataset))]
+        #logging.info(predicted_dim)
+
+        return predicted_dim
