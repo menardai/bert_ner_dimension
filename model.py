@@ -203,7 +203,7 @@ class DimensionBertNer(object):
             self.model = BertForTokenClassification.from_pretrained("bert-base-uncased", num_labels=self.num_labels)
 
             logging.info('*** Loading model weights ***')
-            self.model.load_state_dict(torch.load(model_weight_filename))
+            self.model.load_state_dict(torch.load(model_weight_filename, map_location=self.device))
         else:
             # load bert pretrained with empty token classification top layers
             self.model = BertForTokenClassification.from_pretrained("bert-base-uncased", num_labels=self.num_labels)

@@ -1,0 +1,7 @@
+## Setup py requirements
+# requirements to make inference
+pytorch
+pytorch-pretrained-bert
+# requirements to train the model
+tqdm
+seqeval[cpu]
