@@ -6,7 +6,7 @@ import torch
 import numpy as np
 import torch.utils.data as data
 
-from pytorch_pretrained_bert import BertTokenizer, BertForTokenClassification
+from pytorch_pretrained_bert import BertTokenizer, BertForTokenClassification, BertConfig
 
 
 class DimensionDataset(data.Dataset):
@@ -198,9 +198,10 @@ class DimensionBertNer(object):
 
         logging.info('*** Instantiate model ***')
         if model_weight_filename:
-            # todo - do not load pretrained, we only want the BertForTokenClassification model setup
-            #self.model = BertForTokenClassification(config=..., num_labels=num_labels)
-            self.model = BertForTokenClassification.from_pretrained("bert-base-uncased", num_labels=self.num_labels)
+            config = BertConfig(vocab_size_or_config_json_file=30522, hidden_size=768,
+                                num_hidden_layers=12, num_attention_heads=12, intermediate_size=3072)
+
+            self.model = BertForTokenClassification(config, self.num_labels)
 
             logging.info('*** Loading model weights ***')
             self.model.load_state_dict(torch.load(model_weight_filename, map_location=self.device))
