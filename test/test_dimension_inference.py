@@ -8,7 +8,9 @@ class TestDimension(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ This is called before tests in an individual class are run. """
-        cls.model = DimensionBertNer('../models/dimension_ner_bert_best.pt')
+        cls.model = DimensionBertNer('../models/dimension_ner_bert.pt')
+        cls.model = DimensionBertNer('../models/dimension_ner_bert_last_epoch.pt')
+        #cls.model = DimensionBertNer('../models/dimension_ner_bert_best.pt')
 
     def setUp(self):
         """ This is called immediately before calling the test method. """
@@ -44,6 +46,9 @@ class TestDimension(unittest.TestCase):
     def test_WandH_explicit(self):
         """ width of 640 and height of 480 """
         dim = self.model.predict(["Resize to a width of 1024 and height of 768"])
+        self.assertEqual(dim, [{'W': 1024, 'H': 768}])
+
+        dim = self.model.predict(["width=1024 and height=768"])
         self.assertEqual(dim, [{'W': 1024, 'H': 768}])
 
     def test_HandW_explicit(self):

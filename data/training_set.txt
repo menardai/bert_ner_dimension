@@ -52,6 +52,8 @@ Give me 640 480
 Please 640 480
 Fit to 640 480
 Make 640 480
+I want the image 640 and 480
+Please make it 640, 480
 
 640x480 please!
 640 480 please!
@@ -79,20 +81,16 @@ Make 640 480
 (640,480)
 640 by 480
 640 and 480
+width 640 height 480
+width 640 and height 480
+width 640 for height 480
 640 width and 480 height
 640 width by 480 height
 640 width by 480
 640 by 480 height
-480 height by 640
-480 height and 640
-480 height by 640 width
-480 height and 640 width
-480 height by 640 wide
-480 height and 640 wide
 large of 640 and a height of 480
 horizontal 640 with 480 vertical
 640 horizontal and 480 vertical
-480 vertical for 640 horizontal
 
 Make it 640 wide by 480 height
 Resize it 640 wide by 480 height
@@ -103,8 +101,39 @@ Change the size to 480 height and 640 width
 Change the size to 480 height and 640 wide
 I want the image to be 480 height and 640 width
 I want the image to be 480 height and 640 wide
-I want the image 640 and 480
-Please make it 640, 480
+Resize to 480 height and 640 width
+Resize to a height of 480 and a width of 640
+A height of 480 and width 640
+height 480 width 640
+height of 480 with a width 640
+height of 480 for width 640
+height 480 by width 640
+height 480 and 640 for the other side
+480 height by 640
+480 height and 640
+480 height by 640 width
+480 height and 640 width
+480 height by 640 wide
+480 height and 640 wide
+480 height, 640 width
+480 height 640 width
+height 480, 640 width
+height 480 640 width
+height=480, 640=width
+height=480 640=width
+480 vertical for 640 horizontal
+vertical 480 width 640
+vertical of 480 with a width 640
+vertical of 480 for width 640
+vertical 480 by width 640
+vertical 480 horizontal 640
+vertical of 480 with horizontal 640
+vertical of 480 for horizontal 640
+vertical 480 by horizontal 640
+vertical of 480 with a 640 width
+vertical of 480 for 640 width
+vertical 480 by 640 width
+vertical 480, 640 horizontal
 
 Make it larger at 640
 Make it higher at 480
@@ -151,6 +180,12 @@ Can I resize 2 pictures at once?
 How can we change the size of 2 images?
 Is it possible to apply the same operation to 2 images?
 How do I upload more than 1 image at the time?
+Resize those 2 images for me
+Apply the change to these 2 images please
+Did you get the last 2 images I sent you?
+What is wrong with the last 2 pictures?
+Anything bad about the previous 2 commands?
+Can I send you 2 more requests?
 
 Please repeat the last 2 steps
 Forget about my last 2 comments

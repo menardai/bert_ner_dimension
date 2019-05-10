@@ -39,6 +39,7 @@ Make it 640 wide by 480 height
 Change the size to 640 wide by 480 height
 
 I want the image to be 480 height and 640 wide
+Go for a height of 480 by 640 width
 I want the image 640 and 480
 Please make it 640, 480
 

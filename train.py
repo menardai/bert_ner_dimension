@@ -224,13 +224,16 @@ if __name__ == '__main__':
 
     # train_batch_size is an important hyper params in fine tuning this model
     _, valid_dataset, train_dataloader, valid_dataloader = get_data_loaders(dim_ner.tokenizer,
-                                                          "data/ner_dimension_training_set2.txt",
-                                                          "data/ner_dimension_valid_set.txt",
+                                                          "data/training_set.txt",
+                                                          "data/validation_set.txt",
                                                           train_batch_size=10)
 
-    model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 2e-5)
+    model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 1e-5)
 
     train(model, train_dataloader, valid_dataloader,
-          nb_epochs=30, valid_dataset=valid_dataset,
+          nb_epochs=75, valid_dataset=valid_dataset,
           save_filename='models/dimension_ner_bert.pt',
-          save_min_f1_score=0.95)
+          save_min_f1_score=0.95,
+          eval_f1_score_only=False)
+
+    torch.save(model.state_dict(), 'models/dimension_ner_bert_last_epoch.pt')
