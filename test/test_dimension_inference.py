@@ -59,12 +59,24 @@ class TestDimension(unittest.TestCase):
     def test_W_only_explicit(self):
         """" width=640 """
         dim = self.model.predict(["width=1024"])
-        #dim = self.model.predict(["A width of 1024"])
+        self.assertEqual(dim, [{'W': 1024}])
+
+        dim = self.model.predict(["A width of 1024"])
         self.assertEqual(dim, [{'W': 1024}])
 
     def test_H_only_explicit(self):
         """" height=480 """
         dim = self.model.predict(["height=768 please"])
+        self.assertEqual(dim, [{'H': 768}])
+
+    def test_wrong_W(self):
+        """" Not 2, width is 640 """
+        dim = self.model.predict(["You got it wrong it's not 2, the width is 1024"])
+        self.assertEqual(dim, [{'W': 1024}])
+
+    def test_wrong_H(self):
+        """" Not 2, height is 480 """
+        dim = self.model.predict(["Bad, the height should be 768 and not 2"])
         self.assertEqual(dim, [{'H': 768}])
 
 
