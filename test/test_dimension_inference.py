@@ -56,6 +56,17 @@ class TestDimension(unittest.TestCase):
         dim = self.model.predict(["Resize to a height of 768 and width of 1024"])
         self.assertEqual(dim, [{'W': 1024, 'H': 768}])
 
+    def test_W_only_explicit(self):
+        """" width=640 """
+        dim = self.model.predict(["width=1024"])
+        #dim = self.model.predict(["A width of 1024"])
+        self.assertEqual(dim, [{'W': 1024}])
+
+    def test_H_only_explicit(self):
+        """" height=480 """
+        dim = self.model.predict(["height=768 please"])
+        self.assertEqual(dim, [{'H': 768}])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -65,3 +65,6 @@ How can we change the size of 2 png images?
 How do I upload more than 1 image at the time?
 
 Please repeat the last 2 steps
+
+No, height=480 not 2
+The 2 is bad, the height should be 480

@@ -135,6 +135,10 @@ vertical of 480 for 640 width
 vertical 480 by 640 width
 vertical 480, 640 horizontal
 
+width of 640
+width=640
+height of 480
+height=480
 Make it larger at 640
 Make it higher at 480
 I want an image 480 tall
@@ -190,3 +194,17 @@ Can I send you 2 more requests?
 Please repeat the last 2 steps
 Forget about my last 2 comments
 I want to repeat the last 2 steps on a new image
+
+Sorry my bad, I want a height of 480 not 2
+No, width=640 not 2
+That's wrong, height=480 not 2
+Incorrect, the width is 640 not 2
+The height is 480 and not 2, you got is wrong
+No it's not 2, I want a width of 640
+2 is wrong, I want the height to be 480
+2 is not good, 640 is the width
+2 is not good, the correct width is 640
+The correct height is 480, 2 is bad
+What's wrong with you, I said width=640, it's not 2
+The width is wrong, it's not 2, it's 640
+You got the wrong height, it's not 2 but 640
