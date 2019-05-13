@@ -39,10 +39,8 @@ class DimensionDataset(data.Dataset):
             lines = [line.rstrip('\n') for line in lines_to_predict if line.strip()]
 
         for line in lines:
-            sample = {}
-
             # ex: "Resize 1 image to 640x480"
-            sample['original'] = line
+            sample = {'original': line}
 
             # store a list of all numbers in this text line
             # ex: ['1', '640', '480']
@@ -51,6 +49,11 @@ class DimensionDataset(data.Dataset):
             # replace all numbers by the string " number "
             # ex: "Resize  number  image to  number x number "
             text_number = re.sub('[0-9]+', ' number ', line)
+
+            # replace equivalent tokens to reduce the number of training examples
+            # ex: returns "Resize  number  image to  number x number "
+            #     from "Resize  number  image to ( number , number )"
+            text_number = DimensionDataset.optimize_tokens(text_number)
 
             # store the tokenized version
             # ex: ['[CLS]', 'res', '##ize', 'number', 'image', 'to', 'number', 'x', 'number']
@@ -126,6 +129,31 @@ class DimensionDataset(data.Dataset):
         for index, (idx, label) in enumerate(zip(predictions_ids, predictions_labels)):
             self.samples[index]['labels_ids'] = idx
             self.samples[index]['labels'] = label
+
+    @staticmethod
+    def optimize_tokens(text_number):
+        """
+        replace equivalent tokens to reduce the number of training examples.
+
+
+        ex: from "Resize  number  image to ( number , number )"
+            returns "Resize  number  image to  number x number "
+        """
+        # "(number,number)" --> "number x number"
+        text_number = re.sub('\((\s*)number(\s*),(\s*)number(\s*)\)', ' number x number ', text_number)
+
+        # "(number x number)"  --> "number x number"
+        text_number = re.sub('(\(+)(\s*)number(\s*)x(\s*)number(\s*)(\)+)', ' number x number ', text_number)
+
+        #  "number/number"  --> "number x number"
+        # ("number/number") --> "number x number"
+        text_number = re.sub('(\(*)(\s*)number(\s*)/(\s*)number(\s*)(\)*)', ' number x number ', text_number)
+
+        #  "number:number"  --> "number x number"
+        # ("number:number") --> "number x number"
+        text_number = re.sub('(\(*)(\s*)number(\s*):(\s*)number(\s*)(\)*)', ' number x number ', text_number)
+
+        return text_number
 
     @staticmethod
     def dimension(tokenized_text, labels, number_list):

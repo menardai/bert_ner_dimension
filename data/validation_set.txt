@@ -68,3 +68,6 @@ Please repeat the last 2 steps
 
 No, height=480 not 2
 The 2 is bad, the height should be 480
+
+Change it to 640x480 from the current 2x2
+Go from a 2x2 to a 640x480

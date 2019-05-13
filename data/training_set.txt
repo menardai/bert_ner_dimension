@@ -1,40 +1,50 @@
 Resize the image to 640x480
 Resize the image to 640 480
-Resize the image to 640:480
 Resize the image to 640,480
-Resize the image to 640;480
-Resize the image to 640-480
 Resize the image to 640 by 480
 
 Change the size to 640x480
 Change the size to 640 480
-Change the size to 640:480
 Change the size to 640,480
-Change the size to 640;480
-Change the size to 640-480
 Change the size to 640 by 480
 
 Make it 640x480
 Make it 640 480
-Make it 640:480
 Make it 640,480
-Make it 640;480
-Make it 640-480
 Make it 640 by 480
 
 Fit the picture in 640x480
 Fit the picture in 640 480
-Fit the picture in 640:480
 Fit the picture in 640,480
-Fit the picture in 640;480
-Fit the picture in 640-480
 Fit the picture in 640 by 480
+
+I need a picture 640,480
+I need it to be 640x480
+640 by 480 is what I need
+640x480 as new size
+Give me one of size 640x480
+Give me a picture 640x480
+Give me this picture in 640x480
+Send me one at 640x480
+
+Size of 640 480
+New size=640x480
+I need it to be 640 and 480
+No, the new size should be 640 by 480
+You're correct, the new size is 640 480
+
+Dimension of 640 480
+New dimension=640x480
+I need it to have a dimension of 640 and 480
+Give me one with dimension 640,480
+No, the new dimension must be 640 by 480
+Yes, the new dimension is 640x480
 
 The size I'm looking for is 640x480
 640x480 would be perfect!
 Yes, please go ahead with 640 and 480
 No, 640 by 480 instead
-I expected a dimension of 640:480
+I expected a dimension of 640x480
 The correct dim is 640 by 480, please make the change
 What about a width of 640 and a height of 480?
 Go for 640 and 480 height
@@ -44,8 +54,8 @@ Fit both side in a new image with 640 horiz by 480 vert
 dim 640x480
 dimension: 640 by 480
 a size of 640x480
-(640,480) is good
-I want (640,480)
+640x480 is good
+I want 640x480
 
 Give me 640 480
 640 480 is perfect
@@ -57,28 +67,17 @@ Please make it 640, 480
 
 640x480 please!
 640 480 please!
-640:480 please!
 640,480 please!
-640;480 please!
-640-480 please!
 640 by 480 please!
 
 640x480
 640 480
-640:480
 640,480
-640;480
-640-480
-(640,480)
 640 by 480
 640 and 480
 640x480 pixels
 640 480 pixels
-640:480 pixel
 640,480 pix
-640;480 pixels
-640-480 pixels
-(640,480)
 640 by 480
 640 and 480
 width 640 height 480
@@ -118,7 +117,6 @@ height 480 and 640 for the other side
 480 height, 640 width
 480 height 640 width
 height 480, 640 width
-height 480 640 width
 height=480, 640=width
 height=480 640=width
 480 vertical for 640 horizontal
@@ -208,3 +206,16 @@ The correct height is 480, 2 is bad
 What's wrong with you, I said width=640, it's not 2
 The width is wrong, it's not 2, it's 640
 You got the wrong height, it's not 2 but 640
+
+Resize to 640x480 from 2x2
+Change from 2x2 to 640x480
+I want to change the size from 2x2 to 640x480
+The actual size is 2x2 but I want it 640x480
+The image is 2x2 and I want to 640x480
+Current dimension is 2x2 but give me one with 640x480
+Get me an image that is 640x480 from this 2x2
+I want 640x480 from this 2x2
+Resize it to 640 and 480 from this 2x2
+The image is 2x2, give me a 640x480
+This picture is 2x2, please resize it to 640x480
+Make it 640 and 480 from the actual 2x2

@@ -194,7 +194,7 @@ def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
             score = f1_score(pred_tags, valid_tags)
 
             # save model weights if f1 score meets minimum and set a new standard
-            if save_filename and score > best_f1_score and score > save_min_f1_score:
+            if save_filename and score >= best_f1_score and score > save_min_f1_score:
                 torch.save(model.state_dict(), save_filename)
 
                 best_f1_score = score
