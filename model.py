@@ -14,7 +14,7 @@ class DimensionDataset(data.Dataset):
     labels = ['O', 'W', 'H', 'U']
     label2idx = {label: i for i, label in enumerate(labels)}
 
-    def __init__(self, tokenizer, dataset_filename=None, lines_to_predict=None, max_tokens=16):
+    def __init__(self, tokenizer, dataset_filename=None, lines_to_predict=None, max_tokens=24):
         self.tokenizer = tokenizer
         self.max_tokens = max_tokens
 
@@ -218,7 +218,7 @@ class DimensionBertNer(object):
         labels_flat = labels.flatten()
         return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
-    def predict(self, lines_to_predict, max_tokens=16):
+    def predict(self, lines_to_predict, max_tokens=24):
         """
         Returns dimension dict for each text line of the given lines_to_predict param.
 

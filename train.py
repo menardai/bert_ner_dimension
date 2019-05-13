@@ -20,7 +20,7 @@ def get_data_loaders(tokenizer,
                      valid_dataset_filename,
                      train_batch_size = 10,
                      valid_batch_size = 50,
-                     max_tokens=16):
+                     max_tokens=24):
     """
     Create instance of dataset and data loader for the given training and validation text files.
 
@@ -210,11 +210,11 @@ def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
                     print_mislabeled_samples(valid_dataset, pred_tags)
 
             # compute validation loss and accuracy, if requested
-            if not eval_f1_score_only:
-                eval_loss = eval_loss / nb_eval_steps
-
-                logging.info("Validation loss: {}".format(eval_loss))
-                logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
+            # if not eval_f1_score_only:
+            #     eval_loss = eval_loss / nb_eval_steps
+            #
+            #     logging.info("Validation loss: {}".format(eval_loss))
+            #     logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
 
 
 if __name__ == '__main__':
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 1e-5)
 
     train(model, train_dataloader, valid_dataloader,
-          nb_epochs=75, valid_dataset=valid_dataset,
+          nb_epochs=100, valid_dataset=valid_dataset,
           save_filename='models/dimension_ner_bert.pt',
           save_min_f1_score=0.95,
           eval_f1_score_only=False)
