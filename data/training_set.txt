@@ -207,6 +207,36 @@ What's wrong with you, I said width=640, it's not 2
 The width is wrong, it's not 2, it's 640
 You got the wrong height, it's not 2 but 640
 
+No, 640 is the width not the height
+No, 480 is the height not the width
+My bad, 480 is the height not width
+No, 640 is not the height, it's the width
+No, 640 isn't height, it's width
+You're wrong, the height is not 640, it's the width
+You're wrong, the width is not 480, it's the height
+640 isn't height, it's width... sorry
+480 isn't width, it's height
+This is not the width, 480 is the height
+
+The height is good but the width is 640
+The width is good but the height is 480
+height is 480, the width is correct
+The height is incorrect, height=480
+The width is incorrect, width=640
+You got the wrong width, width is 640
+You got the wrong width, it should be 640
+It's ok but change the width for 640
+Good but change the height for 480
+The height is bad, it should be 480
+Yes, but height should be 480
+Correct, but width should be 640
+Replace width by 640
+Update height to 480
+Replace the height by 480 please
+Forget it, use 480 as height
+Ok, use 640 as width
+No problem, but 480 is the height
+
 Resize to 640x480 from 2x2
 Change from 2x2 to 640x480
 I want to change the size from 2x2 to 640x480

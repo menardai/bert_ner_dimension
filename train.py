@@ -103,7 +103,7 @@ def print_mislabeled_samples(dataset, pred_tags, print_correct=False):
             logging.info(succeed)
 
 
-def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
+def train(model, optimizer, train_dataloader, valid_dataloader=None, nb_epochs=10,
           save_filename=None, save_min_f1_score=0.90,
           eval_f1_score_only=True, valid_dataset=None):
     """ Train the model for the specified number of epochs. """
@@ -216,6 +216,21 @@ def train(model, train_dataloader, valid_dataloader=None, nb_epochs=10,
             #     logging.info("Validation loss: {}".format(eval_loss))
             #     logging.info("Validation Accuracy: {}".format(eval_accuracy/nb_eval_steps))
 
+    logging.info(f"Best F1 score is {best_f1_score}.")
+
+
+def start(dim_ner, valid_dataset, train_dataloader, valid_dataloader):
+    #model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 5e-6)
+    model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 3e-6)
+
+    train(model, optimizer, train_dataloader, valid_dataloader,
+          nb_epochs=100, valid_dataset=valid_dataset,
+          save_filename='models/dimension_ner_bert.pt',
+          save_min_f1_score=0.96,
+          eval_f1_score_only=False)
+
+    torch.save(model.state_dict(), 'models/dimension_ner_bert_last_epoch.pt')
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(message)s')  # no prefix
@@ -228,12 +243,5 @@ if __name__ == '__main__':
                                                           "data/validation_set.txt",
                                                           train_batch_size=10)
 
-    model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 1e-5)
-
-    train(model, train_dataloader, valid_dataloader,
-          nb_epochs=100, valid_dataset=valid_dataset,
-          save_filename='models/dimension_ner_bert.pt',
-          save_min_f1_score=0.95,
-          eval_f1_score_only=False)
-
-    torch.save(model.state_dict(), 'models/dimension_ner_bert_last_epoch.pt')
+    #train_full_only(dim_ner, valid_dataset, train_dataloader, valid_dataloader)
+    start(dim_ner, valid_dataset, train_dataloader, valid_dataloader)

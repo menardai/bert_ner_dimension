@@ -104,6 +104,11 @@ class TestDimension(unittest.TestCase):
         dim = self.model.predict(["Bad, the height should be 768 and not 2"])
         self.assertEqual(dim, [{'H': 768}])
 
+    def test_wrong_H_my_bad(self):
+        """" not the width, 480 is the height """
+        dim = self.model.predict(["This is not the width, 768 is the height"])
+        self.assertEqual(dim, [{'H': 768}])
+
 
 if __name__ == '__main__':
     unittest.main()
