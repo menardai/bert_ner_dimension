@@ -1,4 +1,5 @@
 # NER for Dimension extraction using BERT
+import os
 import logging
 import torch
 
@@ -220,6 +221,9 @@ def train(model, optimizer, train_dataloader, valid_dataloader=None, nb_epochs=1
 
 
 def start(dim_ner, valid_dataset, train_dataloader, valid_dataloader):
+    if not os.path.exists('models'):
+        os.makedirs('models')
+
     #model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 5e-6)
     model, optimizer = setup_model_for_finetuning(dim_ner.model, learning_rate = 3e-6)
 
