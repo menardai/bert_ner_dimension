@@ -162,18 +162,19 @@ class DimensionDataset(data.Dataset):
         ex: {'W': 640, 'H':480}
         '''
         dim = {}
-        index = 0
-        for token, label in zip(tokenized_text, labels):
-            if token == 'number':
-                value = int(number_list[index])
-                index += 1
+        if number_list:
+            index = 0
+            for token, label in zip(tokenized_text, labels):
+                if token == 'number':
+                    value = int(number_list[index])
+                    index += 1
 
-                if label == 'W':
-                    dim['W'] = value
-                elif label == 'H':
-                    dim['H'] = value
-                elif label == 'U':
-                    dim['U'] = value
+                    if label == 'W':
+                        dim['W'] = value
+                    elif label == 'H':
+                        dim['H'] = value
+                    elif label == 'U':
+                        dim['U'] = value
         return dim
 
     def get_item_dimension(self, index, labels=None):
